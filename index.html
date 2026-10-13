@@ -1,416 +1,1022 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>세포의 크기 측정 가상 실험</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        body { font-family: 'Pretendard', sans-serif; }
-        
-        /* 숫자 입력 화살표 숨김 */
-        input[type="number"] { -moz-appearance: textfield; }
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>세포 크기 측정 · 관찰과 보정</title>
+<style>
+:root{font-family:system-ui,-apple-system,'맑은 고딕',sans-serif;color:#22364a;background:#edf3f7;font-size:14px}
+*{box-sizing:border-box}
+body{margin:0}
+button,input,select{font:inherit}
+button{cursor:pointer;border:1px solid #c8d6e2;border-radius:9px;background:white;color:#294158;padding:9px 12px}
+button:hover{background:#eef5fb}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f4b942;outline-offset:2px}
+button.active,.primary{background:#176b88;color:white;border-color:#176b88}
+.primary:hover{background:#10536b}
+button:disabled{opacity:.5;cursor:default}
+header{padding:20px 26px;background:#fff;border-bottom:1px solid #dbe5ed;display:flex;justify-content:space-between;gap:20px;align-items:center}
+h1{font-size:22px;margin:0 0 5px}
+header p{margin:0;color:#597087;font-size:13px}
+.badge{color:#176b88;background:#e9f5f7;padding:7px 12px;border-radius:20px;white-space:nowrap}
+main{display:grid;grid-template-columns:370px 1fr;max-width:1600px;margin:auto;min-height:calc(100vh - 90px)}
+aside{padding:18px;overflow:auto;max-height:calc(100vh - 90px)}
+section{background:white;border:1px solid #dbe5ed;border-radius:14px;padding:17px;margin-bottom:14px}
+h2{font-size:16px;margin:0 0 13px}
+.row{display:flex;align-items:center;gap:8px;margin:10px 0}
+.row label{flex:1}
+.row input[type=number]{width:95px}
+.row input,.row select{padding:7px;border:1px solid #c8d6e2;border-radius:7px;min-width:0}
+input[type=range]{width:100%;accent-color:#176b88;cursor:pointer}
+.presets{display:flex;gap:6px}
+.presets button{flex:1;padding:8px 3px}
+.muted{font-size:12px;color:#637b90;line-height:1.65;margin:8px 0}
+.tip{background:#eef7fa;padding:10px;border-radius:8px;font-size:12px;line-height:1.6}
+.tabs{display:flex;gap:8px;margin-bottom:15px}
+.tabs button{flex:1}
+.message{font-size:13px;line-height:1.6;min-height:20px;margin:10px 0 0}
+.ok{color:#08764c}
+.error{color:#b23c32}
+.field{padding:24px;background:#102738;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;gap:16px}
+.toolbar{width:100%;max-width:780px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;color:#e3eef6;font-size:13px}
+.scope{width:min(100%,72vh,780px);aspect-ratio:1;position:relative;border-radius:50%;overflow:hidden;border:10px solid #243e50;box-shadow:0 0 0 2px #3c586a,0 20px 60px #0005;background:#eaf8fc}
+canvas{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.scope:focus-within{outline:3px solid #f4b942}
+.status{max-width:780px;width:100%;background:#1b3548;color:#deedf5;border:1px solid #345368;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.65}
+.legend{display:flex;gap:18px;flex-wrap:wrap;color:#cbdfe9;font-size:12px}
+.legend span{white-space:nowrap}
+.green{color:#75d3ae}
+.orange{color:#ffba79}
+.red{color:#ff8b8b}
+details{margin-top:12px}
+summary{cursor:pointer;font-weight:600}
+output{font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+.wide{width:100%}
+.answers{background:#f2f8fb;padding:10px;border-radius:8px;line-height:1.8;font-size:13px}
+.stage-demo{background:#eef7fa;border-radius:10px;padding:12px;text-align:center}
+.stage-track{height:40px;position:relative;border-bottom:3px solid #708b9b;margin:8px 15px}
+.stage-slide{position:absolute;left:calc(50% - 45px);top:8px;width:90px;height:20px;background:#bfdfed;border:2px solid #5787a0;border-radius:4px}
+.stage-slide:after{content:"";position:absolute;left:40px;top:5px;width:6px;height:6px;border-radius:50%;background:#c85775}
+.checks{background:#f2f8fb;border-radius:8px;padding:10px;line-height:1.8;margin:10px 0}
+@media(max-width:900px){
+  main{grid-template-columns:320px 1fr}
+  header{padding:14px 18px}
+  .field{padding:14px}
+}
+@media(max-width:680px){
+  main{display:flex;flex-direction:column}
+  .field{order:-1;padding:18px;min-height:440px}
+  .scope{width:min(100%,440px)}
+  aside{max-height:none;padding:14px}
+  header .badge{display:none}
+  h1{font-size:19px}
+  header p{font-size:12px}
+  .toolbar{justify-content:center}
+}
+</style>
 </head>
-<!-- 스크롤 방지, 화면 꽉 채움 (h-[100dvh]를 사용하여 모바일 주소창 대응) -->
-<body class="m-0 p-0 w-screen h-[100dvh] overflow-hidden flex flex-col md:flex-row bg-[#0f172a]">
+<body>
 
-    <!-- 왼쪽(태블릿/모바일에서는 위쪽) 패널: 조작 및 설명 -->
-    <div class="w-full md:w-[400px] lg:w-[450px] h-[45dvh] md:h-full bg-white flex flex-col shadow-2xl z-10 border-b md:border-b-0 md:border-r border-gray-300">
-        <!-- 내용이 길어지면 이 영역 안에서만 스크롤 됨 -->
-        <div class="flex-1 overflow-y-auto p-5 md:p-6 custom-scrollbar">
-            <h1 class="text-xl md:text-2xl font-bold text-gray-800 mb-2">🔬 세포 크기 측정</h1>
-            <p class="text-gray-600 mb-6 text-xs md:text-sm leading-relaxed">대물 눈금과 접안 눈금이 겹치는 부분을 찾아 1눈금 길이를 구하고, 세포의 크기를 측정해 봅시다.</p>
+<header>
+  <div>
+    <h1>🔬 세포 크기 측정 실험실</h1>
+    <p>접안 눈금을 회전시켜 보정하고, 배율에 따른 세포의 모습 변화를 관찰하세요.</p>
+  </div>
+  <span class="badge">관찰 → 체크 → 계산</span>
+</header>
 
-            <!-- 배율 선택 -->
-            <div class="mb-5 md:mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">1. 대물렌즈 배율 선택</label>
-                <div class="flex space-x-2">
-                    <button class="mag-btn flex-1 py-2.5 md:py-3 rounded-lg font-bold border-2 transition-colors border-blue-500 bg-blue-50 text-blue-700" data-mag="100">100X</button>
-                    <button class="mag-btn flex-1 py-2.5 md:py-3 rounded-lg font-bold border-2 transition-colors border-gray-200 hover:border-blue-300 text-gray-600" data-mag="200">200X</button>
-                    <button class="mag-btn flex-1 py-2.5 md:py-3 rounded-lg font-bold border-2 transition-colors border-gray-200 hover:border-blue-300 text-gray-600" data-mag="400">400X</button>
-                </div>
-                <p class="text-xs text-gray-500 mt-2">* 대물마이크로미터 1눈금의 실제 길이는 10μm</p>
-            </div>
+<main>
+<aside>
 
-            <!-- 단계별 패널 -->
-            <div id="panel-step1" class="bg-blue-50 p-4 rounded-xl mb-4 shadow-sm border border-blue-100">
-                <h2 class="font-bold text-blue-800 mb-3 text-sm md:text-base">2. 접안 1눈금 길이 계산</h2>
-                <div class="space-y-3 text-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-700">겹치는 대물 눈금:</span>
-                        <div class="flex items-center"><input type="number" id="input-obj-div" class="w-16 h-8 p-1 text-center font-semibold border border-gray-300 rounded mx-1 focus:ring-2 focus:ring-blue-400 focus:outline-none"> 칸</div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-700">겹치는 접안 눈금:</span>
-                        <div class="flex items-center"><input type="number" id="input-ocu-div" class="w-16 h-8 p-1 text-center font-semibold border border-gray-300 rounded mx-1 focus:ring-2 focus:ring-blue-400 focus:outline-none"> 칸</div>
-                    </div>
-                    <div class="flex items-center justify-between font-bold border-t border-blue-200 pt-3 mt-1 text-blue-900">
-                        <span>접안 1눈금 길이:</span>
-                        <div class="flex items-center"><input type="number" id="input-ocu-len" step="0.1" class="w-20 h-9 p-1 text-center text-base border-2 border-blue-400 rounded mx-1 focus:ring-2 focus:ring-blue-600 focus:outline-none"> μm</div>
-                    </div>
-                </div>
-                <button id="btn-check-step1" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 rounded-lg shadow-md transition-all">정답 확인 및 세포 보기</button>
-                <p id="msg-step1" class="text-sm text-center mt-3 font-bold hidden"></p>
-            </div>
+<section>
+  <h2>1. 대물렌즈 배율</h2>
+  <div class="presets">
+    <button data-mag="4">4×</button>
+    <button data-mag="10">10×</button>
+    <button data-mag="20">20×</button>
+    <button data-mag="40">40×</button>
+    <button data-mag="100">100×</button>
+  </div>
+  <div class="row">
+    <label for="mag">대물렌즈</label>
+    <select id="mag">
+      <option value="4">4×</option>
+      <option value="10" selected>10×</option>
+      <option value="20">20×</option>
+      <option value="40">40×</option>
+      <option value="100">100×</option>
+    </select>
+  </div>
+  <p class="muted">
+    접안렌즈 10× 고정 · 총배율 <strong id="total">100×</strong><br>
+    배율을 바꿔도 접안 눈금의 화면 간격은 일정합니다.
+  </p>
+</section>
 
-            <div id="panel-step2" class="bg-green-50 p-4 rounded-xl mb-4 hidden border border-green-200 shadow-sm transition-all duration-300">
-                <h2 class="font-bold text-green-800 mb-3 text-sm md:text-base">3. 세포 크기 측정</h2>
-                <p class="text-sm text-gray-700 mb-3">화면의 세포는 접안 눈금 <span id="cell-div-text" class="font-bold text-green-700 text-base">?</span>칸 크기입니다. 실제 길이는?</p>
-                <div class="flex items-center justify-center space-x-2">
-                    <input type="number" id="input-cell-size" step="0.1" class="w-24 h-12 p-2 text-center text-xl font-bold border-2 border-green-500 rounded-lg focus:ring-2 focus:ring-green-600 focus:outline-none" placeholder="0.0">
-                    <span class="font-bold text-gray-700 text-lg">μm</span>
-                </div>
-                <button id="btn-check-step2" class="mt-4 w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 rounded-lg shadow-md transition-all">측정 완료</button>
-                <p id="msg-step2" class="text-sm text-center mt-3 font-bold hidden"></p>
-                <button id="btn-reset" class="mt-3 w-full bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold py-2 rounded-lg text-sm transition-all hidden">입력값 지우고 다시하기</button>
-            </div>
-        </div>
+<section>
+  <h2>2. 관찰과 조작</h2>
+  <div class="tabs">
+    <button id="cal-tab" class="active">눈금 보정</button>
+    <button id="cell-tab">세포 측정</button>
+  </div>
+
+  <div class="row">
+    <label for="rotation">접안마이크로미터 회전</label>
+    <input id="rotation-num" type="number" min="-45" max="45"
+           step="0.1" value="8" aria-label="접안 눈금 회전 각도">
+    <span>°</span>
+  </div>
+  <input id="rotation" type="range" min="-45" max="45"
+         step="0.1" value="8" aria-label="접안마이크로미터 회전">
+  <div class="row">
+    <button id="rotate-left">↶ 0.1°</button>
+    <button id="rotate-right">↷ 0.1°</button>
+  </div>
+
+  <div id="cal-controls">
+    <p class="muted">
+      ① 접안 눈금을 회전하여 두 눈금의 기준선을 나란하게 만드세요.<br>
+      ② 일치한다고 생각하는 접안 눈금 두 곳을 화면에서 클릭해 체크하세요.<br>
+      ③ 두 체크 지점 사이의 칸 수를 세어 계산하세요.
+    </p>
+    <div class="row">
+      <label for="tick-number">접안 눈금 번호</label>
+      <input id="tick-number" type="number" min="0" max="100"
+             step="1" value="50">
+      <button id="add-check">체크</button>
     </div>
+    <p class="muted">
+      화면 클릭이 어려우면 눈금 번호를 입력해 체크할 수 있습니다.
+      정답 지점으로 자동 이동하지 않습니다.
+    </p>
+    <div id="checks" class="checks" aria-live="polite">체크한 지점 없음</div>
+    <button id="clear-checks" class="wide">체크 지우기</button>
+  </div>
 
-    <!-- 오른쪽(태블릿/모바일에서는 아래쪽) 캔버스 (현미경 뷰) -->
-    <!-- 현미경 주변을 어둡게 처리하여 렌즈에 집중되도록 구성 -->
-    <div id="canvas-wrapper" class="flex-1 h-[55dvh] md:h-full relative flex items-center justify-center p-3 md:p-8 bg-gray-900 bg-opacity-95">
-        <!-- Javascript로 정사각형(1:1) 비율이 유지되도록 크기 자동 조절됨 -->
-        <div id="canvas-container" class="relative rounded-full overflow-hidden bg-[#e0f2fe] shadow-[0_0_50px_rgba(0,0,0,0.8)] border-4 border-gray-800">
-            <canvas id="microscope-canvas" class="block w-full h-full"></canvas>
-            <!-- 현미경 테두리 그림자 효과 -->
-            <div class="absolute inset-0 rounded-full border-[min(20px,3vw)] border-[#111827] pointer-events-none shadow-[inset_0_0_50px_rgba(0,0,0,0.8)]"></div>
-        </div>
+  <div id="cell-controls" hidden>
+    <div class="row">
+      <label for="cell-type">세포 유형</label>
+      <select id="cell-type">
+        <option value="rbc">적혈구</option>
+        <option value="plant">식물세포</option>
+        <option value="ecoli">대장균</option>
+      </select>
     </div>
+    <p id="cell-description" class="muted"></p>
 
-    <script>
-        // --- 1. 교사 수정 가능 설정 영역 ---
-        const CONFIG = {
-            100: { objDiv: 10, ocuDiv: 20, ocuLen: 5.0 },
-            200: { objDiv: 10, ocuDiv: 40, ocuLen: 2.5 },
-            400: { objDiv: 5,  ocuDiv: 40, ocuLen: 1.25 }
-        };
-        // ------------------------------------
-        
-        let currentMag = 100;
-        let currentStep = 1; 
-        let cellDivisions = 0; 
+    <div class="stage-demo">
+      <b>재물대 좌우 이동</b>
+      <div class="stage-track">
+        <div id="stage-slide" class="stage-slide"></div>
+      </div>
+      <div id="stage-direction" aria-live="polite">재물대 중앙</div>
+    </div>
+    <div class="row">
+      <label for="stage-position">재물대 위치</label>
+      <output id="stage-out">0 μm</output>
+    </div>
+    <input id="stage-position" type="range" min="-100" max="100"
+           step="0.1" value="0" aria-label="재물대 좌우 위치">
+    <div class="row">
+      <button id="stage-left">재물대 ←</button>
+      <button id="stage-center">중앙</button>
+      <button id="stage-right">재물대 →</button>
+    </div>
+    <p class="muted">
+      재물대가 오른쪽으로 움직이면 현미경 상은 왼쪽으로 움직입니다.
+      버튼은 1 μm씩 이동합니다. 세포를 직접 드래그하지 않습니다.
+    </p>
+    <button id="new-cell" class="wide">같은 유형의 새 세포 관찰</button>
+    <p class="muted">
+      배율이 커질수록 같은 세포가 더 크게 보입니다.
+      양끝이 시야 밖으로 나가면 배율을 낮추세요.
+      가로 길이를 측정할 때 접안 눈금은 수평으로 맞추세요.
+    </p>
+  </div>
 
-        // 동적 캔버스 변수
-        let sf = 1; // 스케일 팩터 (창 크기에 따른 비율)
-        let CENTER_X, CENTER_Y, OCU_SPACING, START_X;
+  <div class="row">
+    <button id="reset" class="wide">초기 설정으로</button>
+  </div>
+</section>
 
-        const canvasWrapper = document.getElementById('canvas-wrapper');
-        const canvasContainer = document.getElementById('canvas-container');
-        const canvas = document.getElementById('microscope-canvas');
-        const ctx = canvas.getContext('2d');
-        const magBtns = document.querySelectorAll('.mag-btn');
-        const panelStep2 = document.getElementById('panel-step2');
-        const msgStep1 = document.getElementById('msg-step1');
-        const msgStep2 = document.getElementById('msg-step2');
+<section id="cal-quiz">
+  <h2>3. 접안 1눈금 길이 계산</h2>
+  <p class="muted">
+    대물마이크로미터 1칸 = 10 μm<br>
+    체크한 지점은 계산 확인 전까지 정답 여부를 표시하지 않습니다.
+  </p>
+  <div class="row">
+    <label for="obj-answer">두 체크 사이 대물 눈금</label>
+    <input id="obj-answer" type="number" min="1" step="1">
+    <span>칸</span>
+  </div>
+  <div class="row">
+    <label for="ocu-answer">두 체크 사이 접안 눈금</label>
+    <input id="ocu-answer" type="number" min="1" step="1">
+    <span>칸</span>
+  </div>
+  <div class="row">
+    <label for="len-answer">접안 1칸의 실제 길이</label>
+    <input id="len-answer" type="number" min="0" step="any">
+    <span>μm</span>
+  </div>
+  <button id="check-cal" class="primary wide">계산 확인</button>
+  <p id="cal-msg" class="message" aria-live="polite"></p>
+</section>
 
-        function init() {
-            magBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    magBtns.forEach(b => {
-                        b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
-                        b.classList.add('border-gray-200', 'text-gray-600');
-                    });
-                    const target = e.target;
-                    target.classList.remove('border-gray-200', 'text-gray-600');
-                    target.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
-                    
-                    currentMag = parseInt(target.dataset.mag);
-                    
-                    // 배율 변경 시 1단계로 리셋
-                    currentStep = 1;
-                    panelStep2.classList.add('hidden');
-                    document.getElementById('input-cell-size').value = '';
-                    hideMessage(msgStep2);
-                    
-                    document.getElementById('btn-reset').classList.add('hidden');
-                    document.getElementById('btn-check-step2').classList.remove('hidden');
+<section id="cell-quiz" hidden>
+  <h2>3. 세포 크기 계산</h2>
+  <p class="muted">
+    세포 양끝의 접안 눈금 차이를 읽으세요.
+    적혈구는 지름, 식물세포와 대장균은 가로 길이를 측정합니다.
+  </p>
+  <div class="row">
+    <label for="cell-div-answer">세포가 차지하는 접안 눈금</label>
+    <input id="cell-div-answer" type="number" min="0" step="any">
+    <span>칸</span>
+  </div>
+  <div class="row">
+    <label for="cell-answer">세포의 실제 크기</label>
+    <input id="cell-answer" type="number" min="0" step="any">
+    <span>μm</span>
+  </div>
+  <button id="check-cell" class="primary wide">측정 확인</button>
+  <p id="cell-msg" class="message" aria-live="polite"></p>
+</section>
 
-                    document.getElementById('input-obj-div').value = '';
-                    document.getElementById('input-ocu-div').value = '';
-                    document.getElementById('input-ocu-len').value = '';
-                    hideMessage(msgStep1);
-                    
-                    drawMicroscope();
-                });
-            });
+<section>
+  <h2>계산 도움말</h2>
+  <div class="tip">
+    접안 1칸 길이 = 대물 칸 수 × 10 μm ÷ 접안 칸 수<br>
+    세포 크기 = 접안 칸 수 × 접안 1칸 길이
+  </div>
+  <details id="teacher">
+    <summary>교사용 해설 및 현재 정답</summary>
+    <div id="solution" class="answers"></div>
+    <p class="muted">
+      학습용 가상 현미경: 대물렌즈 10×에서 접안 1칸은 5 μm로 설정했습니다.
+      실제 장비에서는 배율마다 직접 보정합니다.
+      세포 모양·크기는 학습용 예시입니다.
+      적혈구·대장균은 관찰 편의를 위해 실제보다 크게 설정했으며,
+      계산값은 이 모형의 크기입니다.
+      실제 광학 해상도는 재현하지 않습니다.
+    </p>
+  </details>
+</section>
 
-            document.getElementById('btn-check-step1').addEventListener('click', checkStep1);
-            document.getElementById('btn-check-step2').addEventListener('click', checkStep2);
-            document.getElementById('btn-reset').addEventListener('click', () => {
-                document.getElementById('input-cell-size').value = '';
-                hideMessage(msgStep2);
-                document.getElementById('btn-reset').classList.add('hidden');
-                document.getElementById('btn-check-step2').classList.remove('hidden');
-            });
+</aside>
 
-            // 화면 크기가 변할 때마다 캔버스 자동 리사이징 적용
-            window.addEventListener('resize', resizeCanvas);
-            resizeCanvas(); // 최초 1회 실행
-        }
+<div class="field">
+  <div class="toolbar">
+    <span id="view-title">눈금 보정 · 접안 눈금을 회전한 후 두 지점 체크</span>
+    <span id="view-mag">총배율 100×</span>
+  </div>
+  <div class="scope">
+    <canvas id="canvas" tabindex="0"
+      aria-label="현미경 시야. 눈금 보정에서는 접안 눈금을 클릭해 체크합니다. 키보드 사용자는 눈금 번호 입력과 체크 버튼을 이용하세요.">
+    </canvas>
+  </div>
+  <div class="legend">
+    <span class="green">● 접안마이크로미터</span>
+    <span id="stage-legend" class="orange">● 대물마이크로미터 · 1칸 10 μm</span>
+    <span id="check-legend" class="red">● 학생이 체크한 지점</span>
+  </div>
+  <div id="status" class="status" aria-live="polite"></div>
+  <div class="status">
+    접안 눈금은 그대로, 관찰 대상은 배율에 비례하여 확대됩니다.
+    높은 배율에서는 시야에 들어오는 실제 범위가 좁아집니다.
+  </div>
+</div>
+</main>
 
-        // 반응형으로 캔버스 크기와 비율을 다시 계산하는 함수
-        function resizeCanvas() {
-            // 영역의 가로, 세로 중 짧은 쪽을 구해 꽉 차는 정사각형 크기 계산
-            const rect = canvasWrapper.getBoundingClientRect();
-            const padding = 20; // 최소 여백
-            const size = Math.min(rect.width - padding*2, rect.height - padding*2);
-            
-            canvasContainer.style.width = `${size}px`;
-            canvasContainer.style.height = `${size}px`;
-            
-            // 디스플레이 화질(Retina 등)에 맞춰 픽셀 밀도 대응
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = size * dpr;
-            canvas.height = size * dpr;
-            ctx.setTransform(1, 0, 0, 1, 0, 0); // 초기화
-            ctx.scale(dpr, dpr);
-            
-            // 기준 600px 화면 대비 현재 화면 크기의 비율 (스케일 팩터)
-            sf = size / 600; 
-            
-            CENTER_X = size / 2;
-            CENTER_Y = size / 2;
-            
-            // 비율에 맞춰 눈금 간격도 동적 증가
-            OCU_SPACING = 8.5 * sf; 
-            
-            // 눈금 35(10~60의 중앙)가 렌즈 정중앙에 오도록 시작점 계산
-            START_X = CENTER_X - (25 * OCU_SPACING);
+<script>
+'use strict';
 
-            drawMicroscope();
-        }
+const $ = id => document.getElementById(id);
+const canvas = $('canvas');
+const ctx = canvas.getContext('2d');
 
-        function drawMicroscope() {
-            // 배경 지우기 (원 크기는 size와 동일)
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+const cellTypes = {
+  rbc: {
+    name: '적혈구',
+    size: 15,
+    min: 14,
+    max: 16,
+    step: 0.1,
+    description:
+      '가운데가 옅은 원형의 적혈구입니다. 지름을 측정합니다. ' +
+      '관찰 편의를 위해 실제보다 크게 설정한 학습용 모형입니다.'
+  },
+  plant: {
+    name: '식물세포',
+    size: 40,
+    min: 30,
+    max: 50,
+    step: 1,
+    description:
+      '세포벽, 핵, 큰 액포를 단순화했습니다. 가로 길이를 측정합니다. ' +
+      '특정 식물·조직을 지정하지 않은 학습용 예시입니다.'
+  },
+  ecoli: {
+    name: '대장균',
+    size: 8,
+    min: 6,
+    max: 10,
+    step: 0.1,
+    description:
+      '핵이 없는 막대 모양 세포입니다. 긴 축의 길이를 측정합니다. ' +
+      '관찰 편의를 위해 실제보다 크게 설정한 학습용 모형입니다.'
+  }
+};
 
-            // 중앙선
-            ctx.beginPath();
-            ctx.moveTo(0, CENTER_Y);
-            ctx.lineTo(canvas.width / (window.devicePixelRatio||1), CENTER_Y);
-            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-            ctx.lineWidth = 1 * Math.max(1, sf);
-            ctx.stroke();
+const allowedMagnifications = [4, 10, 20, 40, 100];
 
-            drawOcularMicrometer();
-            if (currentStep === 1) {
-                drawObjectiveMicrometer();
-                drawOverlapArrows();
-            }
+const state = {
+  mag: 10,
+  mode: 'cal',
+  rotation: 8,
+  checks: [],
+  cellType: 'rbc',
+  cellSize: 15,
+  stageUm: 0
+};
 
-            if (currentStep === 2) {
-                drawCell();
-            }
-        }
+let size = 600;
 
-        function drawOcularMicrometer() {
-            ctx.fillStyle = '#065f46';
-            ctx.strokeStyle = '#065f46';
-            ctx.textAlign = 'center';
-            ctx.font = `bold ${32 * sf}px Pretendard, sans-serif`;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const fmt = n => Number(n.toFixed(3)).toString();
+const length = () => 50 / state.mag;
 
-            ctx.fillText("접안마이크로미터", CENTER_X, CENTER_Y - (120 * sf));
+// 접안 눈금 화면 간격 고정.
+// 표본 투영 = 실제 길이 × 고정 간격 / 접안 1칸 실제 길이.
+const px = () => 6 * size / 600;
+const cy = () => size * 0.5;
+const angle = () => state.rotation * Math.PI / 180;
 
-            // 0 ~ 100까지 그려서 렌즈 밖까지 꽉 차게 생성
-            for (let actualVal = 0; actualVal <= 100; actualVal++) {
-                const x = START_X + ((actualVal - 10) * OCU_SPACING);
-                
-                let height = 15 * sf;
-                if (actualVal % 10 === 0) height = 30 * sf;
-                else if (actualVal % 5 === 0) height = 20 * sf;
+function ocularPoint(i) {
+  const d = (i - 50) * px();
+  return {
+    x: size / 2 + d * Math.cos(angle()),
+    y: cy() + d * Math.sin(angle())
+  };
+}
 
-                ctx.beginPath();
-                ctx.moveTo(x, CENTER_Y);
-                ctx.lineTo(x, CENTER_Y - height);
-                ctx.lineWidth = (actualVal % 10 === 0 ? 2 : 1) * Math.max(1, sf);
-                ctx.stroke();
+// 대물 눈금의 상대 위치는 고정.
+// 좌우 이동 및 자동 정렬은 하지 않음.
+const stageX = j => size / 2 + (2 + j * state.mag / 5) * px();
 
-                if (actualVal % 10 === 0) {
-                    ctx.fillText(actualVal, x, CENTER_Y - height - (8 * sf));
-                }
-            }
-        }
+function cellGeometry() {
+  const scale = px() / length();
+  return {
+    w: state.cellSize * scale,
+    cx: size / 2 - state.stageUm * scale,
+    cy: cy()
+  };
+}
 
-        function drawObjectiveMicrometer() {
-            const config = CONFIG[currentMag];
-            const objSpacing = (config.ocuDiv * OCU_SPACING) / config.objDiv; 
-            
-            ctx.fillStyle = '#1f2937';
-            ctx.strokeStyle = '#1f2937';
-            ctx.textAlign = 'center';
-            
-            ctx.font = `bold ${32 * sf}px Pretendard, sans-serif`;
-            ctx.fillText("대물마이크로미터", CENTER_X, CENTER_Y + (145 * sf));
-            ctx.font = `bold ${16 * sf}px Pretendard, sans-serif`;
-            ctx.fillText("(1눈금 = 10μm)", CENTER_X, CENTER_Y + (170 * sf));
+function clearAnswers() {
+  for (const id of [
+    'obj-answer', 'ocu-answer', 'len-answer',
+    'cell-div-answer', 'cell-answer'
+  ]) {
+    $(id).value = '';
+  }
 
-            // -50 ~ 100까지 넓게 그리기
-            for (let i = -50; i <= 100; i++) {
-                const x = START_X + (i * objSpacing);
-                
-                let height = 25 * sf;
-                if (i % 10 === 0) height = 45 * sf; 
-                else if (i % 5 === 0) height = 35 * sf;
+  for (const id of ['cal-msg', 'cell-msg']) {
+    $(id).textContent = '';
+    $(id).className = 'message';
+  }
+}
 
-                ctx.beginPath();
-                ctx.moveTo(x, CENTER_Y);
-                ctx.lineTo(x, CENTER_Y + height);
-                ctx.lineWidth = (i % 10 === 0 ? 2.5 : 1) * Math.max(1, sf);
-                ctx.stroke();
-            }
-        }
+function setMag(v) {
+  if (!allowedMagnifications.includes(v)) {
+    update();
+    return;
+  }
 
-        function drawOverlapArrows() {
-            const config = CONFIG[currentMag];
-            const arrow1X = START_X; // 접안 10 위치
-            const arrow2X = START_X + (config.ocuDiv * OCU_SPACING);
+  state.mag = v;
+  state.checks = [];
+  clearAnswers();
+  $('teacher').open = false;
+  update();
+}
 
-            const drawArrow = (x, isTop) => {
-                ctx.fillStyle = '#ef4444';
-                ctx.beginPath();
-                const y = isTop ? CENTER_Y - (55 * sf) : CENTER_Y + (65 * sf);
-                const dir = isTop ? 1 : -1;
-                // 화살표 촉
-                ctx.moveTo(x, y);
-                ctx.lineTo(x - (7 * sf), y + (13 * sf * dir));
-                ctx.lineTo(x + (7 * sf), y + (13 * sf * dir));
-                ctx.fill();
-                
-                // 점선 연결
-                ctx.beginPath();
-                ctx.moveTo(x, y + (13 * sf * dir));
-                ctx.lineTo(x, CENTER_Y);
-                ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-                ctx.lineWidth = 1.5 * Math.max(1, sf);
-                ctx.setLineDash([4 * sf, 4 * sf]);
-                ctx.stroke();
-                ctx.setLineDash([]);
-            };
+function setRotation(v) {
+  if (!Number.isFinite(v)) {
+    update();
+    return;
+  }
 
-            drawArrow(arrow1X, true);
-            drawArrow(arrow1X, false);
-            drawArrow(arrow2X, true);
-            drawArrow(arrow2X, false);
-            
-            ctx.fillStyle = '#ef4444';
-            ctx.font = `bold ${14 * sf}px Pretendard, sans-serif`;
-            ctx.fillText("겹친 부분", arrow1X + (arrow2X - arrow1X)/2, CENTER_Y - (75 * sf));
-            ctx.fillText("겹친 부분", arrow1X + (arrow2X - arrow1X)/2, CENTER_Y + (90 * sf));
-        }
+  state.rotation = Number(clamp(v, -45, 45).toFixed(1));
+  state.checks = [];
+  clearAnswers();
+  $('teacher').open = false;
+  update();
+}
 
-        function generateCell() {
-            let minDiv = 10, maxDiv = 30;
-            if (currentMag === 400) {
-                cellDivisions = Math.floor(Math.random() * ((maxDiv - minDiv)/2)) * 2 + minDiv;
-            } else {
-                cellDivisions = Math.floor(Math.random() * (maxDiv - minDiv)) + minDiv;
-            }
-            document.getElementById('cell-div-text').innerText = cellDivisions;
-            drawMicroscope();
-        }
+function markTick(i) {
+  if (!Number.isInteger(i) || i < 0 || i > 100) {
+    $('cal-msg').textContent =
+      '접안 눈금 번호는 0~100의 정수로 입력하세요.';
+    return;
+  }
 
-        function drawCell() {
-            const cellWidthPx = cellDivisions * OCU_SPACING;
-            // 세포를 접안 20 눈금 위치 쯤에 배치
-            const startX = START_X + (10 * OCU_SPACING); 
-            const endX = startX + cellWidthPx;
-            const cellCenterY = CENTER_Y;
-            const cellHeight = cellWidthPx * 0.7;
-            
-            // 세포 형태
-            ctx.beginPath();
-            ctx.ellipse(startX + cellWidthPx/2, cellCenterY, cellWidthPx/2, cellHeight/2, 0, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(59, 130, 246, 0.4)';
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(37, 99, 235, 0.8)';
-            ctx.lineWidth = 2 * Math.max(1, sf);
-            ctx.stroke();
+  if (state.checks.includes(i)) {
+    state.checks = state.checks.filter(n => n !== i);
+  } else if (state.checks.length < 2) {
+    state.checks.push(i);
+  } else {
+    $('cal-msg').textContent =
+      '이미 두 지점을 체크했습니다. 기존 지점을 다시 클릭해 해제하거나 체크를 지우세요.';
+    return;
+  }
 
-            // 핵
-            ctx.beginPath();
-            ctx.arc(startX + cellWidthPx/2 - (10 * sf), cellCenterY + (5 * sf), cellHeight/4, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(30, 64, 175, 0.6)';
-            ctx.fill();
+  clearAnswers();
+  update();
+}
 
-            // 측정 안내선
-            const lineY = cellCenterY + cellHeight/2 + (20 * sf);
-            ctx.beginPath();
-            // 수직 기둥
-            ctx.moveTo(startX, lineY - (8 * sf)); ctx.lineTo(startX, lineY + (8 * sf));
-            ctx.moveTo(endX, lineY - (8 * sf)); ctx.lineTo(endX, lineY + (8 * sf));
-            // 수평선
-            ctx.moveTo(startX, lineY); ctx.lineTo(endX, lineY);
-            ctx.strokeStyle = '#374151';
-            ctx.lineWidth = 1.5 * Math.max(1, sf);
-            ctx.stroke();
-            
-            // 화살표 촉
-            ctx.fillStyle = '#374151';
-            ctx.beginPath(); ctx.moveTo(startX, lineY); ctx.lineTo(startX+(7 * sf), lineY-(4 * sf)); ctx.lineTo(startX+(7 * sf), lineY+(4 * sf)); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(endX, lineY); ctx.lineTo(endX-(7 * sf), lineY-(4 * sf)); ctx.lineTo(endX-(7 * sf), lineY+(4 * sf)); ctx.fill();
-        }
+function setStage(v) {
+  state.stageUm = Number(clamp(v, -100, 100).toFixed(1));
+  clearAnswers();
+  update();
+}
 
-        function checkStep1() {
-            const inObj = parseInt(document.getElementById('input-obj-div').value);
-            const inOcu = parseInt(document.getElementById('input-ocu-div').value);
-            const inLen = parseFloat(document.getElementById('input-ocu-len').value);
-            
-            const config = CONFIG[currentMag];
-            const isRatioCorrect = (inObj && inOcu) && (inObj / inOcu === config.objDiv / config.ocuDiv);
-            const isLenCorrect = inLen === config.ocuLen;
+function setMode(mode) {
+  state.mode = mode;
+  clearAnswers();
+  $('teacher').open = false;
+  update();
+}
 
-            if (isRatioCorrect && isLenCorrect) {
-                showMessage(msgStep1, "정답입니다! 2단계로 넘어갑니다.", "text-blue-600");
-                
-                if (currentStep === 1) {
-                    setTimeout(() => {
-                        if (currentStep !== 1) return;
-                        currentStep = 2;
-                        panelStep2.classList.remove('hidden');
-                        generateCell();
-                        // 스크롤이 자동으로 2단계 창으로 내려가도록 함
-                        panelStep2.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }, 1000);
-                }
-            } else {
-                if (!isRatioCorrect) {
-                    showMessage(msgStep1, "틀렸습니다. 화면의 빨간 화살표가 가리키는 겹친 눈금 수를 다시 세어보세요.", "text-red-500");
-                } else {
-                    showMessage(msgStep1, `눈금 수는 맞았습니다! 접안 1눈금의 길이를 다시 계산해보세요. (힌트: 대물 ${inObj}칸 = ${inObj * 10}μm)`, "text-red-500");
-                }
-            }
-        }
+function update() {
+  const cal = state.mode === 'cal';
 
-        function checkStep2() {
-            const inSize = parseFloat(document.getElementById('input-cell-size').value);
-            const actualSize = cellDivisions * CONFIG[currentMag].ocuLen;
+  $('mag').value = String(state.mag);
+  $('total').textContent = state.mag * 10 + '×';
+  $('view-mag').textContent = '총배율 ' + state.mag * 10 + '×';
 
-            if (Math.abs(inSize - actualSize) < 0.05) {
-                showMessage(msgStep2, "🎉 정답입니다! 완벽하게 세포 크기를 측정했습니다.", "text-green-600");
-                document.getElementById('btn-reset').classList.remove('hidden');
-                document.getElementById('btn-check-step2').classList.add('hidden');
-            } else {
-                showMessage(msgStep2, `틀렸습니다. (접안 눈금 ${cellDivisions}칸 × 1눈금 길이 ${CONFIG[currentMag].ocuLen}μm = ?)`, "text-red-500");
-            }
-        }
+  document.querySelectorAll('[data-mag]').forEach(b => {
+    b.classList.toggle('active', +b.dataset.mag === state.mag);
+  });
 
-        function showMessage(el, text, colorClass) {
-            el.textContent = text;
-            el.className = `text-sm text-center mt-3 font-bold ${colorClass} block break-keep`;
-        }
-        function hideMessage(el) {
-            el.classList.add('hidden');
-        }
+  $('rotation').value = state.rotation;
+  $('rotation-num').value = state.rotation;
 
-        window.onload = init;
-    </script>
+  for (const id of [
+    'cal-controls', 'cal-quiz', 'stage-legend', 'check-legend'
+  ]) {
+    $(id).hidden = !cal;
+  }
+
+  for (const id of ['cell-controls', 'cell-quiz']) {
+    $(id).hidden = cal;
+  }
+
+  $('cal-tab').classList.toggle('active', cal);
+  $('cell-tab').classList.toggle('active', !cal);
+
+  $('checks').textContent = state.checks.length
+    ? state.checks.map((i, k) =>
+        (k ? 'B' : 'A') + ': 접안 눈금 ' + i
+      ).join(' / ')
+    : '체크한 지점 없음';
+
+  $('check-cal').disabled = state.checks.length !== 2;
+
+  $('cell-type').value = state.cellType;
+  $('cell-description').textContent =
+    cellTypes[state.cellType].description;
+
+  $('stage-position').value = state.stageUm;
+  $('stage-out').textContent = fmt(state.stageUm) + ' μm';
+  $('stage-slide').style.transform =
+    `translateX(${state.stageUm * 0.5}px)`;
+
+  $('stage-direction').textContent =
+    state.stageUm === 0
+      ? '재물대 중앙'
+      : state.stageUm > 0
+        ? '재물대 오른쪽 → / 현미경 상 왼쪽 ←'
+        : '재물대 왼쪽 ← / 현미경 상 오른쪽 →';
+
+  $('view-title').textContent = cal
+    ? '눈금 보정 · 접안 눈금을 회전한 후 두 지점 체크'
+    : cellTypes[state.cellType].name +
+      ' 관찰 · 재물대를 움직여 측정';
+
+  const g = cellGeometry();
+  const outside =
+    g.cx - g.w / 2 < size * 0.04 ||
+    g.cx + g.w / 2 > size * 0.96;
+
+  $('status').textContent = cal
+    ? '두 눈금의 기준선을 나란하게 맞추고, 일치한다고 판단한 접안 눈금 두 곳을 직접 체크하세요. 체크 표시 자체는 정답을 뜻하지 않습니다.'
+    : (outside
+        ? '세포의 양끝이 시야 밖에 있습니다. 재물대를 중앙으로 옮기거나 배율을 낮추세요. '
+        : '') +
+      '접안 눈금 간격은 일정합니다. 배율을 높이면 세포가 더 많은 접안 눈금을 차지하지만 실제 크기는 그대로입니다.';
+
+  $('solution').textContent =
+    `대물렌즈 ${state.mag}×: 접안 1칸 = ${fmt(length())} μm. ` +
+    `${cellTypes[state.cellType].name} = ${fmt(state.cellSize)} μm = ` +
+    `접안 ${fmt(state.cellSize / length())}칸. ` +
+    '일치 지점은 학생이 찾아 체크하도록 화면에 미리 표시하지 않습니다.';
+
+  draw();
+}
+
+function line(x1, y1, x2, y2, color, width = 1) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.stroke();
+}
+
+function label(text, x, y, color, font = 14) {
+  ctx.fillStyle = color;
+  ctx.font = `${font}px system-ui,sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(text, x, y);
+}
+
+function draw() {
+  const dpr = window.devicePixelRatio || 1;
+  const s = size / 600;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, size, size);
+
+  const bg = ctx.createRadialGradient(
+    size * 0.45, size * 0.4, 0,
+    size / 2, size / 2, size * 0.55
+  );
+  bg.addColorStop(0, '#f7fdff');
+  bg.addColorStop(1, '#cce9ef');
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, size, size);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.clip();
+
+  if (state.mode === 'cell') {
+    drawCell(s);
+  }
+
+  if (state.mode === 'cal') {
+    line(0, cy(), size, cy(), '#a74d17', 1.2 * s);
+
+    const interval = state.mag / 5 * px();
+    const lo = Math.ceil((-size / 2 - 2 * px()) / interval);
+    const hi = Math.floor((size / 2 - 2 * px()) / interval);
+
+    for (let j = lo; j <= hi; j++) {
+      const x = stageX(j);
+      const h = (j % 5 === 0 ? 30 : 21) * s;
+
+      line(x, cy(), x, cy() + h, '#a74d17', 1.2 * s);
+
+      if (interval > 15 * s || j % 5 === 0) {
+        label(j + 100, x, cy() + h + 15 * s, '#a74d17', 12 * s);
+      }
+    }
+  }
+
+  ctx.save();
+  ctx.translate(size / 2, cy());
+  ctx.rotate(angle());
+
+  line(-size / 2, 0, size / 2, 0, '#087352', 1.2 * s);
+
+  for (let i = 0; i <= 100; i++) {
+    const x = (i - 50) * px();
+    const h = (i % 10 === 0 ? 29 : i % 5 === 0 ? 21 : 12) * s;
+
+    line(
+      x, 0, x, -h,
+      '#087352',
+      i % 10 === 0 ? 1.5 * s : 0.8 * s
+    );
+
+    if (i % 5 === 0) {
+      label(i, x, -h - 9 * s, '#087352', 12 * s);
+    }
+  }
+
+  ctx.restore();
+
+  // 학생이 체크한 지점만 표시합니다.
+  // 일치 후보 지점을 자동으로 표시하지 않습니다.
+  if (state.mode === 'cal') {
+    for (let k = 0; k < state.checks.length; k++) {
+      const v = ocularPoint(state.checks[k]);
+
+      ctx.beginPath();
+      ctx.arc(v.x, v.y, 6 * s, 0, Math.PI * 2);
+      ctx.strokeStyle = '#d8484b';
+      ctx.lineWidth = 2 * s;
+      ctx.stroke();
+
+      line(
+        v.x, v.y - 8 * s,
+        v.x, v.y - 55 * s,
+        '#d8484b', 1.2 * s
+      );
+
+      ctx.beginPath();
+      ctx.arc(v.x, v.y - 64 * s, 11 * s, 0, Math.PI * 2);
+      ctx.fillStyle = '#d8484b';
+      ctx.fill();
+
+      label(
+        k ? 'B' : 'A',
+        v.x, v.y - 60 * s,
+        'white', 12 * s
+      );
+    }
+  }
+
+  ctx.restore();
+
+  label(
+    '접안마이크로미터',
+    size / 2, size * 0.18,
+    '#087352', 18 * s
+  );
+
+  if (state.mode === 'cal') {
+    label(
+      '대물마이크로미터',
+      size / 2, size * 0.81,
+      '#a74d17', 18 * s
+    );
+
+    label(
+      '1칸 = 10 μm',
+      size / 2, size * 0.86,
+      '#a74d17', 14 * s
+    );
+  } else {
+    label(
+      cellTypes[state.cellType].name +
+      ' · 재물대를 움직여 양끝 눈금 읽기',
+      size / 2, size * 0.87,
+      '#346481', 13 * s
+    );
+  }
+
+  const vig = ctx.createRadialGradient(
+    size / 2, size / 2, size * 0.39,
+    size / 2, size / 2, size * 0.51
+  );
+  vig.addColorStop(0, '#0000');
+  vig.addColorStop(1, '#17334555');
+
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, size, size);
+}
+
+function drawCell(s) {
+  const {w, cx, cy} = cellGeometry();
+
+  const h = w * (
+    state.cellType === 'rbc'
+      ? 1
+      : state.cellType === 'plant' ? 0.62 : 0.32
+  );
+
+  ctx.lineWidth = Math.max(
+    0.3 * s,
+    Math.min(2 * s, w * 0.025)
+  );
+
+  if (state.cellType === 'rbc') {
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#e98791aa';
+    ctx.fill();
+    ctx.strokeStyle = '#b95565';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, w * 0.23, h * 0.23, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#fce9e5cc';
+    ctx.fill();
+
+  } else if (state.cellType === 'plant') {
+    ctx.beginPath();
+    ctx.roundRect(
+      cx - w / 2, cy - h / 2,
+      w, h, Math.min(w * 0.06, h * 0.15)
+    );
+    ctx.fillStyle = '#8bcf8b99';
+    ctx.fill();
+    ctx.strokeStyle = '#44834d';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.roundRect(
+      cx - w * 0.38, cy - h * 0.37,
+      w * 0.67, h * 0.72, w * 0.045
+    );
+    ctx.fillStyle = '#e5f4dbbb';
+    ctx.fill();
+    ctx.strokeStyle = '#6ca67c';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(
+      cx + w * 0.37, cy + h * 0.12,
+      w * 0.06, h * 0.11,
+      0, 0, Math.PI * 2
+    );
+    ctx.fillStyle = '#827ca8';
+    ctx.fill();
+
+  } else {
+    ctx.beginPath();
+    ctx.roundRect(cx - w / 2, cy - h / 2, w, h, h / 2);
+    ctx.fillStyle = '#d9af68aa';
+    ctx.fill();
+    ctx.strokeStyle = '#93713b';
+    ctx.stroke();
+  }
+}
+
+function number(id) {
+  return $(id).value.trim() === ''
+    ? NaN
+    : Number($(id).value);
+}
+
+function message(id, text, ok) {
+  $(id).textContent = text;
+  $(id).className = 'message ' + (ok ? 'ok' : 'error');
+}
+
+function chosenPair() {
+  if (
+    state.checks.length !== 2 ||
+    Math.abs(state.rotation) > 0.2
+  ) {
+    return null;
+  }
+
+  const pairs = state.checks.map(i => {
+    const j = (i - 52) / (state.mag / 5);
+    return {
+      i,
+      j: Math.round(j),
+      error: Math.abs(j - Math.round(j))
+    };
+  });
+
+  return pairs.every(v => v.error < 1e-6)
+    ? pairs
+    : null;
+}
+
+function checkCal() {
+  if (Math.abs(state.rotation) > 0.2) {
+    message(
+      'cal-msg',
+      '접안 눈금을 회전하여 두 기준선을 더 정확하게 나란히 맞추세요.',
+      false
+    );
+    return;
+  }
+
+  const pair = chosenPair();
+
+  if (!pair) {
+    message(
+      'cal-msg',
+      '체크한 지점 중 두 눈금이 일치하지 않는 곳이 있습니다. 눈금을 다시 관찰하여 체크하세요.',
+      false
+    );
+    return;
+  }
+
+  const od = Math.abs(pair[1].j - pair[0].j);
+  const oc = Math.abs(pair[1].i - pair[0].i);
+  const x = number('obj-answer');
+  const y = number('ocu-answer');
+  const z = number('len-answer');
+
+  if (
+    ![x, y, z].every(Number.isFinite) ||
+    Math.min(x, y, z) <= 0
+  ) {
+    message('cal-msg', '세 항목에 양수를 입력하세요.', false);
+    return;
+  }
+
+  if (x !== od || y !== oc) {
+    message(
+      'cal-msg',
+      '체크 지점은 맞았습니다. 두 지점 사이의 칸 수를 다시 세어보세요.',
+      false
+    );
+    return;
+  }
+
+  if (Math.abs(z - length()) > 0.005000001) {
+    message(
+      'cal-msg',
+      `${od} × 10 ÷ ${oc}을 계산하세요. 소수 둘째 자리까지 반올림해도 됩니다.`,
+      false
+    );
+    return;
+  }
+
+  message(
+    'cal-msg',
+    '일치 지점과 계산이 모두 맞았습니다! 이 배율에서 세포를 측정해 보세요.',
+    true
+  );
+}
+
+function checkCell() {
+  if (Math.abs(state.rotation) > 0.2) {
+    message(
+      'cell-msg',
+      '가로 길이를 읽을 수 있도록 접안 눈금을 수평으로 맞추세요.',
+      false
+    );
+    return;
+  }
+
+  const g = cellGeometry();
+
+  if (
+    g.cx - g.w / 2 < size * 0.04 ||
+    g.cx + g.w / 2 > size * 0.96
+  ) {
+    message(
+      'cell-msg',
+      '세포 양끝이 보이도록 재물대를 옮기거나 배율을 낮추세요.',
+      false
+    );
+    return;
+  }
+
+  const a = number('cell-div-answer');
+  const b = number('cell-answer');
+
+  if (
+    ![a, b].every(Number.isFinite) ||
+    Math.min(a, b) <= 0
+  ) {
+    message('cell-msg', '두 항목에 양수를 입력하세요.', false);
+    return;
+  }
+
+  if (Math.abs(a - state.cellSize / length()) > 0.051) {
+    message(
+      'cell-msg',
+      '양끝의 접안 눈금 차이를 다시 읽으세요. 소수 첫째 자리까지 반올림해도 됩니다.',
+      false
+    );
+    return;
+  }
+
+  if (
+    Math.abs(b - state.cellSize) >
+    Math.max(0.051, state.cellSize * 0.02)
+  ) {
+    message(
+      'cell-msg',
+      '접안 칸 수에 보정한 접안 1칸 길이를 곱하세요.',
+      false
+    );
+    return;
+  }
+
+  message(
+    'cell-msg',
+    '정답입니다! 배율을 바꾸면 세포가 차지하는 눈금 수가 달라져도 실제 크기는 같습니다.',
+    true
+  );
+}
+
+for (const b of document.querySelectorAll('[data-mag]')) {
+  b.onclick = () => setMag(+b.dataset.mag);
+}
+
+$('mag').onchange = () => setMag(Number($('mag').value));
+
+$('rotation').oninput = () =>
+  setRotation(+$('rotation').value);
+
+$('rotation-num').onchange = () =>
+  setRotation(number('rotation-num'));
+
+$('rotate-left').onclick = () =>
+  setRotation(state.rotation - 0.1);
+
+$('rotate-right').onclick = () =>
+  setRotation(state.rotation + 0.1);
+
+$('add-check').onclick = () =>
+  markTick(number('tick-number'));
+
+$('clear-checks').onclick = () => {
+  state.checks = [];
+  clearAnswers();
+  update();
+};
+
+$('cal-tab').onclick = () => setMode('cal');
+$('cell-tab').onclick = () => setMode('cell');
+
+$('stage-position').oninput = () =>
+  setStage(+$('stage-position').value);
+
+$('stage-left').onclick = () => setStage(state.stageUm - 1);
+$('stage-right').onclick = () => setStage(state.stageUm + 1);
+$('stage-center').onclick = () => setStage(0);
+
+$('cell-type').onchange = () => {
+  state.cellType = $('cell-type').value;
+  state.cellSize = cellTypes[state.cellType].size;
+  state.stageUm = 0;
+  clearAnswers();
+  $('teacher').open = false;
+  update();
+};
+
+$('new-cell').onclick = () => {
+  const t = cellTypes[state.cellType];
+
+  state.cellSize = Number((
+    t.min +
+    Math.floor(
+      Math.random() *
+      (Math.round((t.max - t.min) / t.step) + 1)
+    ) * t.step
+  ).toFixed(1));
+
+  state.stageUm = 0;
+  clearAnswers();
+  $('teacher').open = false;
+  update();
+};
+
+$('reset').onclick = () => {
+  Object.assign(state, {
+    mag: 10,
+    mode: 'cal',
+    rotation: 8,
+    checks: [],
+    cellType: 'rbc',
+    cellSize: 15,
+    stageUm: 0
+  });
+
+  clearAnswers();
+  $('teacher').open = false;
+  update();
+};
+
+$('check-cal').onclick = checkCal;
+$('check-cell').onclick = checkCell;
+
+canvas.addEventListener('click', e => {
+  if (state.mode !== 'cal') return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left - size / 2;
+  const y = e.clientY - rect.top - cy();
+
+  const c = Math.cos(angle());
+  const s = Math.sin(angle());
+
+  const along = x * c + y * s;
+  const across = -x * s + y * c;
+
+  if (Math.abs(across) > 42 * size / 600) return;
+
+  const i = Math.round(along / px() + 50);
+  markTick(i);
+});
+
+function resize() {
+  size = canvas.getBoundingClientRect().width;
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = Math.round(size * dpr);
+  canvas.height = Math.round(size * dpr);
+
+  update();
+}
+
+new ResizeObserver(resize).observe(canvas);
+update();
+</script>
 </body>
 </html>
